@@ -105,6 +105,8 @@ def get_items(request):
 	gs = Geom.objects.filter(geometry__contains=p)
 	names=[]
 	for g in gs:
-		names.append(g.name)
+		names.append("op:"+g.name)
+
+
 
 	return HttpResponse(json.dumps(names))
