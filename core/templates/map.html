@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>SCRIPTORIVM</title>
+	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+	<link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.css" />
+	<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
+	<link href='https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-draw/v0.2.2/leaflet.draw.css' rel='stylesheet' />
+	<style type="text/css">
+		.main_content{
+			height:100%;
+		}
+
+		.sidebar{
+			display: none;
+		}
+
+		footer{
+			width: 100%;
+			background-color: white;	
+			text-align: center;
+		}
+
+		#main{
+			margin-top: -20px;
+		}
+	</style>
+</head>
+<body>
+	<header>
+		<nav class="navbar navbar-default navbar-static-top">
+	      <div class="container">
+	        <div class="navbar-header">
+	          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+	            <span class="sr-only">Toggle navigation</span>
+	            <span class="icon-bar"></span>
+	            <span class="icon-bar"></span>
+	            <span class="icon-bar"></span>
+	          </button>
+	          <a class="navbar-brand" href="#">SCRIPTORIVM</a>
+	        </div>
+	        <div id="navbar" class="navbar-collapse collapse">
+	          <ul class="nav navbar-nav">
+	            <li><a href="/">Mappa</a></li>
+	            <li><a href="/timeline?mode=res">Timeline Ricerche</a></li>
+	            <li><a href="/timeline?mode=his">Timeline Pompei</a></li>
+	          </ul>
+	          <ul class="nav navbar-nav navbar-right">
+	            <li><a href="#" id="area_adder"><i class="fa fa-fw fa-file"></i>Aggiungi Zona di Interesse</a></li>
+	            <li><a href="#"><i class="fa fa-fw fa-user"></i>{{User.username}}</a></li>
+	          </ul>
+	        </div><!--/.nav-collapse -->
+	      </div>
+	    </nav>
+	</header>
+	<div id="main">
+		<div class="main_content sidebar" id="lsidebar"></div>
+		<div class="main_content" id="map"></div>
+		<div class="main_content sidebar" id="rsidebar"></div>
+	</div>
+	<footer>Made with <i class="fa fa-fw fa-heart"></i> in Pompei</footer>
+
+	<script src="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.js"></script>
+	<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+	<script src='https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-draw/v0.2.2/leaflet.draw.js'></script>
+	<script src='https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-hash/v0.2.1/leaflet-hash.js'></script>
+
+	<script type="text/javascript">
+
+	var SC = {};
+
+	function do_resize(){
+		$("#main").height($(window).height()-$("header").height()-$("footer").height());
+	}
+
+	$(window).resize(do_resize);
+
+	$("#area_adder").click(function(){
+		SC.drawnItems = new L.FeatureGroup();
+		SC.map.addLayer(SC.drawnItems);
+		SC.drawControl = new L.Control.Draw({
+			draw:{
+				circle:false
+			},
+   			edit: {
+        		featureGroup: SC.drawnItems
+    		}
+		});
+		SC.map.addControl(SC.drawControl);
+	});
+ 
+
+
+	$(function(){
+		do_resize();
+		
+		//the map
+		SC.map = L.map('map').setView([40.75097,14.48905], 17);
+		var hash = L.hash(SC.map);
+
+		//prepare map
+		var osmUrl='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+		var osmAttrib='Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors';
+		var osm = new L.TileLayer(osmUrl, {minZoom: 16, maxZoom: 22, attribution: osmAttrib});	
+		osm.addTo(SC.map);
+
+		//setup events
+		SC.map.on("draw:drawstop", function(e){
+			var ls = e.layers;
+			console.log(e);
+			$('#myModal').modal({})
+    		SC.map.removeControl(SC.drawControl);
+		});	
+		
+		//get geojson
+		$.getJSON("/map.geojson");
+	});
+	</script>
+
+<div id="myModll" class="hidden"> 
+	<div class="modal fade">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Modal title</h4>
+      </div>
+      <div class="modal-body">
+        <p>One fine body&hellip;</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">Save changes</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+</div>
+
+</body>
+</html>
