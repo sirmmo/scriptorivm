@@ -1,6 +1,9 @@
 from django.db import models
 from django.contrib.gis.db import models
 from django.contrib.auth.models import User
+from django.contrib.gis.geos import GEOSGeometry
+
+import json
 
 # Create your models here.
 
@@ -39,7 +42,7 @@ class Geom(models.Model):
 		r = {
 			"type":"Feature",
 			"properties":self.as_json(),
-			"geometry": GEOSGeometry(self.geometry).json
+			"geometry": json.loads(GEOSGeometry(self.geometry).json)
 		}
 		return r
 
@@ -50,7 +53,7 @@ class Geom(models.Model):
 			"tags": [a.name for a in self.tags.all()]
 		}
 		if flat:
-			r["geometry"] = GEOSGeometry(self.geometry).json
+			r["geometry"] = json.loads(GEOSGeometry(self.geometry).json)
 		return r
 
 

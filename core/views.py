@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect
+from django.contrib.gis.geos import GEOSGeometry, Point
 # Create your views here.
 
 from core.models import *
@@ -91,3 +92,19 @@ def timeline(request, mode="REF"):
 		ret["date"].append(paper.as_timeline(mode))
 
 	return HttpResponse(json.dumps(ret))
+
+
+def get_items(request):
+	lon = float(request.GET.get("lon", "0.0"))
+	lat = float(request.GET.get("lat", "0.0"))
+
+	#period = json.loads(request.GET.get("phase", "[]"))
+
+	p = Point(lon, lat, srid="4326")
+
+	gs = Geom.objects.filter(geometry__contains=p)
+	names=[]
+	for g in gs:
+		names.append(g.name)
+
+	return HttpResponse(json.dumps(names))

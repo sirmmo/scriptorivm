@@ -18,7 +18,7 @@ from django.contrib import admin
 
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
-    url(r'$', "core.views.index"),
-    url(r'add/area$', "core.views.upsert_geometry"),
-    url(r'add/research$', "core.views.upsert_paper"),
+    url(r'^map\.geojson$', "core.views.geojson"),
+    url(r'^touch$', "core.views.get_items"),
+    url(r'^$', "core.views.index"),
 ]

@@ -114,7 +114,18 @@
 		});	
 		
 		//get geojson
-		$.getJSON("/map.geojson");
+		$.getJSON("/map.geojson", function(data){
+			SC.geo = L.geoJson(data).addTo(SC.map);
+
+			SC.geo.on("click", function(e){
+				var latlng = e.latlng;
+				$.getJSON("/touch?lon="+latlng.lng+"&lat="+latlng.lat, function(data){
+					console.log(data);
+				});
+			});
+		});
+
+	
 	});
 	</script>
 
