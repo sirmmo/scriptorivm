@@ -103,10 +103,21 @@ def get_items(request):
 	p = Point(lon, lat, srid="4326")
 
 	gs = Geom.objects.filter(geometry__contains=p)
-	names=[]
+	names={}
 	for g in gs:
-		names.append("op:"+g.name)
+		names.["op:"+g.name]=g.tags.all()
 
+	ret = {}
 
+	#@STEKOSTEKO inseririe qui \/ la url su zotero
+	base_url = ""
 
-	return HttpResponse(json.dumps(names))
+	for name in names:
+		if base_url != "":
+				r = requests.get(base_url+"?tag=%s" % name).json
+		else:
+				r = {}
+
+		ret[name] = r
+
+	return HttpResponse(json.dumps(ret))
