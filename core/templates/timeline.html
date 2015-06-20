@@ -114,47 +114,15 @@
 	$(function(){
 		do_resize();
 		
-		//the map
-		SC.map = L.map('map').setView([40.75097,14.48905], 17);
-		var hash = L.hash(SC.map);
-
-		//prepare map
-		var osmUrl='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-		var osmAttrib='Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors';
-		var osm = new L.TileLayer(osmUrl, {minZoom: 16, maxZoom: 22, attribution: osmAttrib});	
-		osm.addTo(SC.map);
-
-		//setup events
-		SC.map.on("draw:drawstop", function(e){
-			var ls = e.layers;
-			console.log(e);
-			$('#myModal').modal({})
-    		SC.map.removeControl(SC.drawControl);
-		});	
-
-		$(".closer").click(function(){
-			$(this).parent().hide();
-		});
-		
+	
 		//get geojson
-		$.getJSON("/map.geojson", function(data){
-			SC.geo = L.geoJson(data, {
-				style:function (feature){
-					if (feature.properties.tags.indexOf("Regio") >= 0){
-						return { opacity: 0.4, color:"yellow", weight:7 }
-					} else if (feature.properties.tags.indexOf("Domus") >= 0){
-						return {color:"black", weight:1,  opacity:1}
-					} else {
-						return {color:"orange", weight:3, opacity:0.6}
-					}
-				}
-			}).addTo(SC.map);
+		$.getJSON("/timeline.json", function(data){
 
 			SC.geo.on("click", function(e){
 				var latlng = e.latlng;
-				var url = "/touch?lon="+latlng.lng+"&lat="+latlng.lat;
 
-				
+				if (filter_phase){
+				}
 
 				$.getJSON(url, function(data){
 					$("#lsidebar .content").empty();

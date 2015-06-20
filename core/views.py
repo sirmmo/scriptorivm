@@ -7,39 +7,14 @@ from django.contrib.gis.geos import GEOSGeometry, Point
 from core.models import *
 
 import json
+import requests
 
 def index(request):
 	return render(request, "map.html")
 
-#CRUD OPS
-@login_required
-def upsert_paper(request, id=None):
-	if request.method == "GET":
-		return render(request, "form.html")
-	else:
-		pass
+def timeline(request):
+	return render(request, "timeline.html")
 
-@login_required
-def delete_paper(request, id):
-	if request.method == "DELETE":
-		pass
-	else:
-		pass
-
-
-@login_required
-def upsert_geometry(request, id=None):
-	if request.method == "GET":
-		return render("form.html", request)
-	else:
-		pass
-
-@login_required
-def delete_geometry(request, id):
-	if request.method == "DELETE":
-		pass
-	else:
-		pass
 
 #visualize data
 def get_filter(request):
@@ -59,10 +34,38 @@ def get_filter(request):
 
 	return filter
 
+def get_tags(keys_only=True):
+	op_tags = []
+	op_intensity = {}
+	r = requests.get("https://api.zotero.org/groups/360979/tags?start=0&limit=100&v=3").json()
+	for tag in r:
+		if "op:" in tag.get("tag"):
+			if "." in tag.get("tag"):
+					op_tags.append(tag.get("tag").split(":")[1])
+					op_intensity[tag.get("tag")] = tag.get("meta").get("numItems")
+					
+			elif tag.get("tag").split(":")[1] in ["I","II","III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"]:
+					op_tags.append(tag.get("tag").split(":")[1])
+					op_intensity[tag.get("tag")] = tag.get("meta").get("numItems")
+
+			else:
+					op_tags.append(tag.get("tag"))
+					op_intensity[tag.get("tag")] = tag.get("meta").get("numItems")
+
+	if keys_only:
+		return op_tags
+	else:
+		return op_intensity
+
 def geojson(request):
 	filter = get_filter(request)
 
 	ret = {"features":[], "type":"FeatureCollection"}
+
+	op_tags = get_tags()
+
+
+	filter["name__in"]=op_tags
 
 	#fix bbox
 	for geom in Geom.objects.filter(**filter):
@@ -70,33 +73,46 @@ def geojson(request):
 
 	return HttpResponse(json.dumps(ret))
 
-def timeline(request, mode="REF"):
-	filter = get_filter(request)
-	
-	ret = {
-		"timeline": {
-		"headline": "Research Timeline",
-		"type": "default",
-		"text": "",
-		"date":[]
-		}
-	}
+def the_timeline(request, mode="REF"):
+	#filter = get_filter(request)
+	#
+	#ret = {
+	#	"timeline": {
+	#	"headline": "Research Timeline",
+	#	"type": "default",
+	#	"text": "",
+	#	"date":[]
+	#	}
+	#}
+#
+	#order = "refers_to_date" if mode=="REF" else "publication_date"
+#
+	#first = True
+	#for paper in Paper.objects.filter(**filter).order_by(order):
+	#	if first:
+	#		ret["startDate"] = getattr(paper, order)
+	#		first = False
+	#	ret["date"].append(paper.as_timeline(mode))
+#
+	#return HttpResponse(json.dumps(ret))
+	ret = []
 
-	order = "refers_to_date" if mode=="REF" else "publication_date"
-
-	first = True
-	for paper in Paper.objects.filter(**filter).order_by(order):
-		if first:
-			ret["startDate"] = getattr(paper, order)
-			first = False
-		ret["date"].append(paper.as_timeline(mode))
-
+	tags = get_tags(False)
+	for phase in Phase.objects.all():
+		ret.append({
+			"name":phase.name,
+			"from":phase.year_from,
+			"to":phase.year_to,
+			"amount":tags.get(phase.symbol, 0)
+		})
 	return HttpResponse(json.dumps(ret))
 
 
 def get_items(request):
 	lon = float(request.GET.get("lon", "0.0"))
 	lat = float(request.GET.get("lat", "0.0"))
+
+	filter_prefix = "op:"
 
 	#period = json.loads(request.GET.get("phase", "[]"))
 
@@ -105,19 +121,19 @@ def get_items(request):
 	gs = Geom.objects.filter(geometry__contains=p)
 	names={}
 	for g in gs:
-		names.["op:"+g.name]=g.tags.all()
+		names["op:"+g.name]=[t.name for t in g.tags.all()]
 
 	ret = {}
 
-	#@STEKOSTEKO inseririe qui \/ la url su zotero
-	base_url = ""
+
+	base_url = """https://api.zotero.org/groups/360979/items?start=0&limit=50&v=3&tag={}"""
 
 	for name in names:
 		if base_url != "":
-				r = requests.get(base_url+"?tag=%s" % name).json
+				r = requests.get(base_url.format(name)).json()
 		else:
 				r = {}
 
-		ret[name] = r
+		ret[name] = {"tags":names[name], "researches":r}
 
 	return HttpResponse(json.dumps(ret))

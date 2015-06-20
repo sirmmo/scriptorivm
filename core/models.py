@@ -9,6 +9,7 @@ import json
 
 class Tag(models.Model):
 	name = models.TextField()
+	symbol = models.CharField(max_length=100)
 	class Meta:
 		abstract=True
 
@@ -20,12 +21,16 @@ class GeoTag(Tag):
 
 class Phase(models.Model):
 	name = models.CharField(max_length=300)
+	symbol = models.CharField(max_length=100)
 	description = models.TextField(blank=True, null=True)
 	year_from = models.IntegerField()
 	year_to = models.IntegerField()
 
 	def __str__(self):
 		return self.name
+
+	class Meta:
+		ordering = ["year_from"]
 
 
 class Geom(models.Model):
@@ -49,7 +54,6 @@ class Geom(models.Model):
 	def as_json(self, flat=False):
 		r = {
 			"name": self.name,
-			"papers": [a.id for a in self.researches.all()],
 			"tags": [a.name for a in self.tags.all()]
 		}
 		if flat:
@@ -96,3 +100,6 @@ class Paper(models.Model):
 			"tags": [a.name for a in self.tags.all()]
 		}
 		return r
+
+
+

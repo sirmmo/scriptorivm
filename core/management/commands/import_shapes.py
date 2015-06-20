@@ -44,3 +44,21 @@ class Command(BaseCommand):
 				g.tags.add(tag_insula)
 
 
+		ds_domi = DataSource('/srv/scriptorium/scriptorium/shp/domi.shp')
+		tag_insula, c = GeoTag.objects.get_or_create(name="Domus")
+
+		source = SpatialReference("32633")
+
+		for l in ds_domi:      
+			print l.fields
+			for f in l:
+				trans = CoordTransform(source, target)
+				g = Geom()
+				g.geometry = f.geom.geos
+				g.geometry.transform(trans)
+				g.name  = f.get("N2")
+				g.description = f.get("N9")
+				g.save()
+				g.tags.add(tag_insula)
+
+

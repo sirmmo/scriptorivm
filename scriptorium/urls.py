@@ -20,5 +20,7 @@ urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^map\.geojson$', "core.views.geojson"),
     url(r'^touch$', "core.views.get_items"),
+    url(r'^timeline$', "core.views.timeline"),
+    url(r'^timeline\.json$', "core.views.the_timeline"),
     url(r'^$', "core.views.index"),
 ]
