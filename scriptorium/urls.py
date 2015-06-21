@@ -22,5 +22,6 @@ urlpatterns = [
     url(r'^touch$', "core.views.get_items"),
     url(r'^timeline$', "core.views.timeline"),
     url(r'^timeline\.json$', "core.views.the_timeline"),
+    url(r'^timeline-items\.json$', "core.views.get_timeilne_items"),
     url(r'^$', "core.views.index"),
 ]

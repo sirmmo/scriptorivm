@@ -1,22 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>SCRIPTORIVM</title>
+	<title>SCRIPTORIVM - Timeline</title>
 	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
 	<link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.css" />
 	<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
 	<link href='https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-draw/v0.2.2/leaflet.draw.css' rel='stylesheet' />
 	<style type="text/css">
-		.main_content{
-			height:100%;
-		}
 
 		.sidebar{
-			display: none;
-			position:absolute;
-			z-index: 10000;
-			top:0px;
-			width: 	400px;
+
 			padding:3px;
 			background-color: white;
 		}
@@ -33,15 +26,15 @@
 		}
 
 
-		#main{
-			margin-top: -20px;
-			position: relative;
+		#map{
+			height: 200px;
 		}
 
-		.closer{
-		  cursor: pointer;
-		  position: absolute;
-		  right: 20px;
+		.timeframe{
+			border:1px solid orange;
+			background-color: 	orange;
+			display: inline-block;
+			cursor: pointer;
 		}
 	</style>
 </head>
@@ -61,7 +54,7 @@
 	        <div id="navbar" class="navbar-collapse collapse">
 	          <ul class="nav navbar-nav">
 	            <li><a href="/">Mappa</a></li>
-	            <li><a href="/timeline?mode=his">Timeline Pompei</a></li>
+	            <li><a href="/timeline?mode=his">Timeline</a></li>
 	          </ul>
 	          <ul class="nav navbar-nav navbar-right">
 	          </ul>
@@ -70,46 +63,27 @@
 	    </nav>
 	</header>
 	<div id="main">
-		<div class="main_content sidebar" id="lsidebar">
-			<div class="closer"><i class="fa fa-fw fa-close"></i></div>
+		<div class="sidebar" id="lsidebar">
 			<div class="content"></div>
 		</div>
-		<div class="main_content" id="map"></div>
-		<div class="main_content sidebar" id="rsidebar"></div>
+		<div id="map"></div>
 	</div>
 	<footer>Made with <i class="fa fa-fw fa-heart"></i> in Pompei</footer>
 
-	<script src="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.js"></script>
 	<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-	<script src='https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-draw/v0.2.2/leaflet.draw.js'></script>
-	<script src='https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-hash/v0.2.1/leaflet-hash.js'></script>
 
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/timelinejs/2.36.0/js/timeline.js"></script>
+	
 	<script type="text/javascript">
 
 	var SC = {};
 
 	function do_resize(){
-		$("#main").height($(window).height()-$("header").height()-$("footer").height());
+		$("#lsidebar").height($(window).height()-$("header").height()-$("footer").height()-$("#map").height()-40);
 	}
 
 	$(window).resize(do_resize);
-
-	$("#area_adder").click(function(){
-		SC.drawnItems = new L.FeatureGroup();
-		SC.map.addLayer(SC.drawnItems);
-		SC.drawControl = new L.Control.Draw({
-			draw:{
-				circle:false
-			},
-   			edit: {
-        		featureGroup: SC.drawnItems
-    		}
-		});
-		SC.map.addControl(SC.drawControl);
-	});
- 
-
 
 	$(function(){
 		do_resize();
@@ -118,12 +92,23 @@
 		//get geojson
 		$.getJSON("/timeline.json", function(data){
 
-			SC.geo.on("click", function(e){
-				var latlng = e.latlng;
+			var timespan = data.length//data[data.length-1].to - data[0].from;
+			timespan = $(window).width() / timespan;
+			max_amount = 0;
+			for (var i in data){
+				if (data[i].amount > max_amount)
+					max_amount = data[i].amount;
+			}
+			var slot = 200/max_amount;
+			for (var i in data){
+				var block = data[i].to-data[i].from;
+				$("#map").append("<div style='width:"+timespan+"px; height:"+data[i].amount*slot+"px;' class='timeframe' data-filter='"+data[i].filter+"' data-from='"+data[i].from+"' data-to='"+data[i].to+"' data-amount='"+data[i].amount+"' title='"+data[i].from + " - "+ data[i].to + ": " + data[i].amount+"''>Età "+data[i].name+"</div>");
+			}
 
-				if (filter_phase){
-				}
-
+			$(".timeframe").click(function(){
+				var phase = $(this).data("filter");
+				var url = "/timeline-items.json?phase="+phase;
+			
 				$.getJSON(url, function(data){
 					$("#lsidebar .content").empty();
 					for (var a in data){
@@ -137,14 +122,14 @@
 
 						for (var r in data[a].researches){
 							var res = data[a].researches[r];
-							to_add += "<div class='research panel panel-default'>";
+							to_add += "<div class='col-md-4'><div class='research panel panel-default'>";
 							to_add += "<div class='panel-heading'><h3>";
 							to_add += res.data.title ;
 							to_add += " <a target='_blank' href='"+res.links.alternate.href+"'><i class='fa fa-fw fa-globe'></i></a>";
 							to_add += "</h3></div>";
 
 							to_add += "<div class='panel-body'>";
-							to_add += "<div class='authors-list'>Authors: ";
+							to_add += "<div class='authors-list'><i class='fa fa-fw fa-user'></i> Authors: ";
 
 							for (var ra in res.data.creators){
 								var name = "";
@@ -152,15 +137,24 @@
 									name = res.data.creators[ra].firstName + " " + res.data.creators[ra].lastName;
 								else
 									name = res.data.creators[ra].name;
-								to_add += "<span class='label label-primary' title='" + res.data.creators[ra].creatorType + "'><i class='fa fa-fw fa-user'></i>"+ name +"</span>";	
+								to_add += "<span class='label label-primary' title='" + res.data.creators[ra].creatorType + "'>"+ name +"</span><br/>";	
 							}
 							to_add += "</div>";
+							to_add += "<div class='date-list'><i class='fa fa-fw fa-table'></i> Date: ";
+							to_add += "<span class='label label-primary' title='" + res.data.date + "'>"+ res.data.date +"</span>";	
+							to_add += "</div>";
+							if (res.data.place){
+								to_add += "<div class='date-list'><i class='fa fa-fw fa-globe'></i> Place: ";
+								to_add += "<span class='label label-primary' title='" + res.data.place + "'>"+ res.data.place +"</span>";	
+								to_add += "</div>";
+							}
 							to_add += "</div>";
 
 							to_add += "<div class='tags-list panel-footer'>";
 							for (var rt in res.data.tags){
 								to_add +="<span class='badge'><i class='fa fa-fw fa-tag'></i>"+res.data.tags[rt].tag+"</span>";
 							}
+							to_add += "</div>";
 							to_add += "</div>";
 							to_add += "</div>";
 						}

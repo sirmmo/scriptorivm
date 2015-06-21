@@ -103,9 +103,18 @@ def the_timeline(request, mode="REF"):
 			"name":phase.name,
 			"from":phase.year_from,
 			"to":phase.year_to,
-			"amount":tags.get(phase.symbol, 0)
+			"amount":tags.get(phase.symbol, 0),
+			"filter":phase.symbol
 		})
 	return HttpResponse(json.dumps(ret))
+
+def get_timeilne_items(request):
+	phase = request.GET.get("phase")
+	phases = {}
+	phases[phase] = [phase]
+
+	return get_filtered_items(phases)
+
 
 
 def get_items(request):
@@ -123,10 +132,12 @@ def get_items(request):
 	for g in gs:
 		names["op:"+g.name]=[t.name for t in g.tags.all()]
 
+	return get_filtered_items(names)
+
+def get_filtered_items(names):
+
 	ret = {}
-
-
-	base_url = """https://api.zotero.org/groups/360979/items?start=0&limit=50&v=3&tag={}"""
+	base_url = """https://api.zotero.org/groups/360979/items?start=0&limit=100&v=3&tag={}"""
 
 	for name in names:
 		if base_url != "":

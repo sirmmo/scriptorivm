@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>SCRIPTORIVM</title>
+	<title>SCRIPTORIVM - Map</title>
 	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
 	<link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.css" />
 	<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
@@ -61,7 +61,7 @@
 	        <div id="navbar" class="navbar-collapse collapse">
 	          <ul class="nav navbar-nav">
 	            <li><a href="/">Mappa</a></li>
-	            <li><a href="/timeline?mode=his">Timeline Pompei</a></li>
+	            <li><a href="/timeline?mode=his">Timeline</a></li>
 	          </ul>
 	          <ul class="nav navbar-nav navbar-right">
 	          </ul>
@@ -154,8 +154,6 @@
 				var latlng = e.latlng;
 				var url = "/touch?lon="+latlng.lng+"&lat="+latlng.lat;
 
-				
-
 				$.getJSON(url, function(data){
 					$("#lsidebar .content").empty();
 					for (var a in data){
@@ -176,7 +174,7 @@
 							to_add += "</h3></div>";
 
 							to_add += "<div class='panel-body'>";
-							to_add += "<div class='authors-list'>Authors: ";
+							to_add += "<div class='authors-list'><i class='fa fa-fw fa-user'></i> Authors: ";
 
 							for (var ra in res.data.creators){
 								var name = "";
@@ -184,9 +182,17 @@
 									name = res.data.creators[ra].firstName + " " + res.data.creators[ra].lastName;
 								else
 									name = res.data.creators[ra].name;
-								to_add += "<span class='label label-primary' title='" + res.data.creators[ra].creatorType + "'><i class='fa fa-fw fa-user'></i>"+ name +"</span>";	
+								to_add += "<span class='label label-primary' title='" + res.data.creators[ra].creatorType + "'>"+ name +"</span><br/>";	
 							}
 							to_add += "</div>";
+							to_add += "<div class='date-list'><i class='fa fa-fw fa-table'></i> Date: ";
+							to_add += "<span class='label label-primary' title='" + res.data.date + "'>"+ res.data.date +"</span>";	
+							to_add += "</div>";
+							if (res.data.place){
+								to_add += "<div class='date-list'><i class='fa fa-fw fa-globe'></i> Place: ";
+								to_add += "<span class='label label-primary' title='" + res.data.place + "'>"+ res.data.place +"</span>";	
+								to_add += "</div>";
+							}
 							to_add += "</div>";
 
 							to_add += "<div class='tags-list panel-footer'>";
